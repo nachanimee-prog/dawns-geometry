@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#090a12">
+  <meta name="description" content="Dawns Geometri — neon cube rhythm runner.">
+  <title>Dawns Geometri</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <style>
+    :root{--bg:#090a12;--panel:#111522;--line:#252c40;--orange:#ff7a35;--cyan:#50f6ff;--text:#f5f7ff;--muted:#9aa4bd}
+    *{box-sizing:border-box}
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overscroll-behavior:none}
+    body{touch-action:manipulation}
+    button{font:inherit}
+    #app{height:100%;height:100dvh;display:flex;flex-direction:column;position:relative;isolation:isolate}
+    header{height:66px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid #20263a;background:#0a0c15eF;z-index:3}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.08em}
+    .brandmark{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#ffb14e,#ff5b2e);display:grid;place-items:center;color:#17101a;box-shadow:0 0 24px #ff7a3540;font-weight:1000}
+    .brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:.22em;margin-top:1px}
+    .top-actions{display:flex;gap:8px}
+    .iconbtn{border:1px solid #30364a;background:#141827;color:#e9eeff;border-radius:12px;width:40px;height:40px;display:grid;place-items:center}
+    main{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+    #game-wrap{position:relative;flex:1;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#171b31 0%,#090a12 70%)}
+    canvas{display:block;width:100%;height:100%;touch-action:none}
+    .hud{position:absolute;inset:14px 14px auto;display:flex;justify-content:space-between;pointer-events:none;gap:8px}
+    .pill{background:#0a0d18bf;border:1px solid #343b53;border-radius:12px;padding:8px 12px;font-size:12px;color:#dce4ff;backdrop-filter:blur(8px)}
+    .pill strong{color:white}
+    .progress{position:absolute;top:0;left:0;right:0;height:4px;background:#22283a;z-index:1}
+    #progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--cyan));box-shadow:0 0 12px #50f6ff88}
+    .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:#0709129c;backdrop-filter:blur(5px);z-index:2}
+    .overlay.hidden{display:none}
+    .panel{width:min(100%,430px);max-height:100%;overflow:auto;background:linear-gradient(155deg,#171d30f7,#0d101bf7);border:1px solid #38415b;border-radius:26px;padding:24px;box-shadow:0 25px 80px #0009;text-align:center}
+    .eyebrow{font-size:10px;font-weight:900;letter-spacing:.3em;color:var(--cyan)}
+    h1{font-size:clamp(34px,8vw,54px);line-height:.98;margin:12px 0 10px;letter-spacing:-.055em}
+    h1 span{color:var(--orange);text-shadow:0 0 28px #ff7a3550}
+    .desc{color:var(--muted);font-size:13px;line-height:1.6;margin:0 auto 20px;max-width:310px}
+    .btn{width:100%;border:0;border-radius:14px;padding:14px 16px;background:linear-gradient(100deg,#ff994b,#ff642e);color:#1a1010;font-weight:900;box-shadow:0 8px 24px #ff6b3030;margin-top:9px}
+    .btn.secondary{background:#20273a;border:1px solid #3a435c;color:#edf1ff;box-shadow:none}
+    .btn:active,.iconbtn:active{transform:scale(.98)}
+    .level-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0 12px}
+    .level{border:1px solid #333b52;background:#111625;border-radius:13px;padding:12px 5px;color:#e8edff;font-size:12px}
+    .level.active{border-color:var(--orange);box-shadow:inset 0 0 0 1px #ff7a3530}
+    .level b{display:block;font-size:14px;margin-bottom:3px}
+    .level span{font-size:10px;color:var(--muted)}
+    .stats{display:flex;justify-content:center;gap:24px;margin:16px 0;color:var(--muted);font-size:11px}
+    .stats strong{display:block;color:white;font-size:20px}
+    #bottom{flex:none;display:flex;justify-content:space-between;align-items:center;padding:10px 16px calc(10px + env(safe-area-inset-bottom));gap:10px;background:#0a0c15;border-top:1px solid #20263a;color:#7f8aa5;font-size:10px}
+    #jump-hint{color:#cbd3e8;letter-spacing:.12em;font-weight:800}
+    .toast{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);background:#151b2b;border:1px solid #39435e;padding:9px 14px;border-radius:999px;font-size:12px;white-space:nowrap;z-index:5;display:none}
+    .toast.show{display:block}
+    @media(min-width:700px){header{padding-inline:28px}#game-wrap{max-width:1100px;width:100%;margin:auto;border-inline:1px solid #20263a}#bottom{padding-inline:28px}}
+    @media(max-height:540px){header{height:52px}.brandmark{width:28px;height:28px}.panel{padding:16px}h1{font-size:32px}.desc{margin-bottom:10px}.level-list{margin:10px 0}.stats{margin:8px 0}#bottom{padding-top:5px;padding-bottom:5px}}
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><div class="brandmark">D</div><div>DAWNS<small>GEOMETRI</small></div></div>
+    <div class="top-actions">
+      <button class="iconbtn" id="sound-btn" aria-label="Suara" title="Suara">♪</button>
+      <button class="iconbtn" id="pause-btn" aria-label="Jeda" title="Jeda">Ⅱ</button>
+    </div>
+  </header>
+  <main>
+    <div id="game-wrap">
+      <canvas id="game" aria-label="Permainan Dawns Geometri"></canvas>
+      <div class="progress"><div id="progress-fill"></div></div>
+      <div class="hud">
+        <div class="pill">LEVEL <strong id="hud-level">01 / DAWN</strong></div>
+        <div class="pill">SCORE <strong id="hud-score">00000</strong></div>
+        <div class="pill">BEST <strong id="hud-best">00000</strong></div>
+      </div>
+      <div class="overlay" id="menu">
+        <section class="panel">
+          <div class="eyebrow">A NEON RHYTHM RUNNER</div>
+          <h1>DAWNS<br><span>GEOMETRI</span></h1>
+          <p class="desc">Lompat tepat waktu. Hindari duri. Kejar cahaya di ujung lintasan.</p>
+          <div class="level-list" id="levels">
+            <button class="level active" data-level="0"><b>01</b><span>DAWN</span></button>
+            <button class="level" data-level="1"><b>02</b><span>PULSE</span></button>
+            <button class="level" data-level="2"><b>03</b><span>CHAOS</span></button>
+          </div>
+          <div class="stats">
+            <div>BEST SCORE<strong id="menu-best">0</strong></div>
+            <div>JUMP MODE<strong>ONE TAP</strong></div>
+          </div>
+          <button class="btn" id="play-btn">▶  MULAI BERMAIN</button>
+          <button class="btn secondary" id="how-btn">CARA BERMAIN</button>
+        </section>
+      </div>
+      <div class="overlay hidden" id="end-screen">
+        <section class="panel">
+          <div class="eyebrow" id="end-eyebrow">RUN ENDED</div>
+          <h1 id="end-title">COBA<br><span>LAGI!</span></h1>
+          <p class="desc" id="end-desc">Satu lompatan lagi, kamu pasti bisa.</p>
+          <div class="stats"><div>SCORE<strong id="end-score">0</strong></div><div>PROGRESS<strong id="end-progress">0%</strong></div></div>
+          <button class="btn" id="retry-btn">↻  COBA LAGI</button>
+          <button class="btn secondary" id="menu-btn">KEMBALI KE MENU</button>
+        </section>
+      </div>
+      <div class="overlay hidden" id="pause-screen">
+        <section class="panel">
+          <div class="eyebrow">TAKE A BREATH</div><h1>GAME<br><span>PAUSED</span></h1>
+          <p class="desc">Lintasan menunggu kamu.</p>
+          <button class="btn" id="resume-btn">▶  LANJUTKAN</button>
+          <button class="btn secondary" id="pause-menu-btn">KEMBALI KE MENU</button>
+        </section>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+  </main>
+  <div id="bottom"><span>DAWNS STUDIO · BUILD 1.0</span><span id="jump-hint">TAP TO JUMP  ↗</span><span>OFFLINE READY</span></div>
+</div>
+<script>
+(() => {
+  "use strict";
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const $ = id => document.getElementById(id);
+  const levelData = [
+    {name:"DAWN", speed:300, length:4200, color:"#ff7a35", accent:"#50f6ff", gaps:[650,1120,1570,2050,2540,3000,3490,3900]},
+    {name:"PULSE", speed:350, length:4700, color:"#a66bff", accent:"#50f6ff", gaps:[560,930,1320,1710,2120,2520,2920,3330,3740,4150,4500]},
+    {name:"CHAOS", speed:395, length:5100, color:"#ff4f8b", accent:"#ffcf5a", gaps:[520,850,1190,1530,1870,2220,2570,2920,3270,3620,3970,4320,4680,4930]}
+  ];
+  let W=800,H=450,dpr=1,ground=350,selectedLevel=0,state="menu",last=0,world=0,score=0,progress=0,best=0;
+  let obstacles=[],particles=[],stars=[],player={x:120,y:0,size:28,vy:0,rot:0,onGround:true},soundOn=false,audio=null;
+  const GRAVITY=1900,JUMP=-680;
+  try { best=Number(localStorage.getItem("dawns-geometri-best")||0); } catch(e){}
+  $("menu-best").textContent=best;
+  $("hud-best").textContent=String(best).padStart(5,"0");
+  function resize(){
+    const r=canvas.getBoundingClientRect(); dpr=Math.min(window.devicePixelRatio||1,2);
+    W=Math.max(320,r.width); H=Math.max(220,r.height);
+    canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+    ground=H*.78; player.x=Math.max(70,W*.18); player.size=Math.max(22,Math.min(32,H*.07));
+    if(player.onGround)player.y=ground-player.size;
+    stars=Array.from({length:65},()=>({x:Math.random()*W,y:Math.random()*H*.72,r:Math.random()*1.7+.3,a:Math.random()*.5+.15}));
+  }
+  window.addEventListener("resize",resize); resize();
+  function makeObstacles(){
+    obstacles=[]; const data=levelData[selectedLevel];
+    let prev=320;
+    for(let i=0;i<data.gaps.length;i++){
+      const at=data.gaps[i]; if(at-prev>170) obstacles.push({x:at,y:ground,h:30+((i+selectedLevel)%3)*3,w:29,type:"spike"});
+      if(i%3===1 && at-prev>260) obstacles.push({x:at+68,y:ground,h:28,w:28,type:"spike"});
+      if(selectedLevel>0 && i%4===2) obstacles.push({x:at+145,y:ground,h:22,w:46,type:"block"});
+      prev=at;
+    }
+    obstacles.push({x:data.length-120,y:ground,h:60,w:24,type:"finish"});
+  }
+  function resetRun(){
+    world=0;score=0;progress=0;particles=[];player.vy=0;player.rot=0;player.onGround=true;player.y=ground-player.size;
+    makeObstacles();$("hud-level").textContent=String(selectedLevel+1).padStart(2,"0")+" / "+levelData[selectedLevel].name;
+    $("hud-score").textContent="00000";$("progress-fill").style.width="0%";
+  }
+  function showToast(text){const el=$("toast");el.textContent=text;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),1800);}
+  function beep(freq=440,duration=.07){
+    if(!soundOn)return;
+    try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain();o.type="sine";o.frequency.value=freq;g.gain.value=.055;o.connect(g);g.connect(audio.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);o.stop(audio.currentTime+duration);}catch(e){}
+  }
+  function jump(){
+    if(state!=="playing")return;
+    if(player.onGround){player.vy=JUMP;player.onGround=false;burst(player.x+player.size/2,player.y+player.size,8,levelData[selectedLevel].color);beep(520,.06);}
+  }
+  function burst(x,y,n,color){
+    for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,s=50+Math.random()*220;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-35,life:.35+Math.random()*.5,max:.85,size:2+Math.random()*4,color});}
+  }
+  function start(){resetRun();state="playing";$("menu").classList.add("hidden");$("end-screen").classList.add("hidden");$("pause-screen").classList.add("hidden");last=performance.now();}
+  function die(){
+    if(state!=="playing")return;state="dead";burst(player.x+player.size/2,player.y+player.size/2,26,"#ff5b62");beep(120,.22);
+    best=Math.max(best,score);try{localStorage.setItem("dawns-geometri-best",best);}catch(e){}
+    $("menu-best").textContent=best;$("hud-best").textContent=String(best).padStart(5,"0");
+    $("end-eyebrow").textContent="RUN ENDED";$("end-title").innerHTML="COBA<br><span>LAGI!</span>";$("end-desc").textContent="Waktu lompatanmu belum pas. Coba lagi, runner!";$("end-score").textContent=score;$("end-progress").textContent=Math.floor(progress)+"%";$("end-screen").classList.remove("hidden");
+  }
+  function win(){
+    if(state!=="playing")return;state="won";score+=500;best=Math.max(best,score);try{localStorage.setItem("dawns-geometri-best",best);}catch(e){}
+    $("menu-best").textContent=best;$("end-eyebrow").textContent="LEVEL COMPLETE";$("end-title").innerHTML="LEVEL<br><span>CLEAR!</span>";$("end-desc").textContent="Keren! Kamu berhasil melewati lintasan."; $("end-score").textContent=score;$("end-progress").textContent="100%";$("end-screen").classList.remove("hidden");burst(W*.78,ground-40,45,levelData[selectedLevel].accent);beep(780,.18);
+  }
+  function roundedRect(x,y,w,h,r,fill,stroke){
+    ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}
+  }
+  function drawBackground(dt){
+    const data=levelData[selectedLevel]||levelData[0];
+    const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,"#0c1020");grad.addColorStop(1,"#090a12");ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+    for(const s of stars){ctx.globalAlpha=s.a*(.7+.3*Math.sin(world*.003+s.x));ctx.fillStyle="#dce8ff";ctx.fillRect(s.x,s.y,s.r,s.r);}ctx.globalAlpha=1;
+    ctx.save();ctx.strokeStyle=data.accent;ctx.globalAlpha=.09;ctx.lineWidth=1;
+    const grid=42,offset=(world*.35)%grid;
+    for(let x=-grid;x<W+grid;x+=grid){ctx.beginPath();ctx.moveTo(x-offset,H*.35);ctx.lineTo(x-offset,ground);ctx.stroke();}
+    for(let y=ground;y>H*.35;y-=grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    ctx.restore();
+    ctx.fillStyle="#0d1423";ctx.fillRect(0,ground,W,H-ground);
+    ctx.fillStyle=data.color;ctx.globalAlpha=.16;ctx.fillRect(0,ground,W,3);ctx.globalAlpha=1;
+    ctx.fillStyle="#29324a";ctx.fillRect(0,ground+4,W,2);
+    for(let x=-(world*.8%55);x<W;x+=55){ctx.fillStyle="#1c263b";ctx.fillRect(x,ground+18,26,3);}
+  }
+  function drawObstacle(o){
+    const x=o.x-world+player.x;
+    if(x<-90||x>W+100)return;
+    const data=levelData[selectedLevel];
+    if(o.type==="spike"){
+      ctx.save();ctx.shadowBlur=18;ctx.shadowColor=data.color;ctx.fillStyle=data.color;
+      ctx.beginPath();ctx.moveTo(x,ground);ctx.lineTo(x+o.w/2,ground-o.h);ctx.lineTo(x+o.w,ground);ctx.closePath();ctx.fill();
+      ctx.strokeStyle="#fff4e8";ctx.globalAlpha=.65;ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
+    }else if(o.type==="block"){
+      ctx.save();ctx.shadowBlur=12;ctx.shadowColor=data.accent;ctx.fillStyle="#19233a";ctx.strokeStyle=data.accent;ctx.lineWidth=2;ctx.fillRect(x,ground-o.h,o.w,o.h);ctx.strokeRect(x,ground-o.h,o.w,o.h);ctx.restore();
+    }else{
+      ctx.save();ctx.strokeStyle=data.accent;ctx.shadowBlur=20;ctx.shadowColor=data.accent;ctx.lineWidth=3;ctx.strokeRect(x,ground-o.h,o.w,o.h);ctx.beginPath();ctx.moveTo(x+o.w/2,ground-o.h);ctx.lineTo(x+o.w/2,ground);ctx.stroke();ctx.restore();
+    }
+  }
+  function update(dt){
+    const data=levelData[selectedLevel];
+    if(state==="playing"){
+      world+=data.speed*dt;score=Math.floor(world/10);progress=Math.min(100,world/data.length*100);
+      player.vy+=GRAVITY*dt;player.y+=player.vy*dt;
+      if(player.y+player.size>=ground){player.y=ground-player.size;player.vy=0;player.onGround=true;player.rot=Math.round(player.rot/(Math.PI/2))*(Math.PI/2);}
+      else{player.onGround=false;player.rot+=dt*5.2;}
+      const px=player.x+player.size*.2,py=player.y+player.size*.2,pw=player.size*.6,ph=player.size*.6;
+      for(const o of obstacles){
+        const ox=o.x-world+player.x;
+        if(o.type==="finish" && ox<player.x+player.size && ox+o.w>player.x){win();break;}
+        if(o.type==="spike"){
+          const left=ox+o.w*.22,right=ox+o.w*.78,top=ground-o.h*.78;
+          if(px<right&&px+pw>left&&py+ph>top&&py<ground-2){die();break;}
+        }else if(o.type==="block"&&px<ox+o.w&&px+pw>ox&&py+ph>ground-o.h){die();break;}
+      }
+      $("hud-score").textContent=String(score).padStart(5,"0");$("progress-fill").style.width=progress+"%";
+    }
+    for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=400*dt;p.life-=dt;if(p.life<=0)particles.splice(i,1);}
+  }
+  function drawPlayer(){
+    const s=player.size,x=player.x,y=player.y,data=levelData[selectedLevel];
+    ctx.save();ctx.translate(x+s/2,y+s/2);ctx.rotate(player.rot);ctx.shadowBlur=24;ctx.shadowColor=data.color;
+    const g=ctx.createLinearGradient(-s/2,-s/2,s/2,s/2);g.addColorStop(0,"#fff0c4");g.addColorStop(.35,data.color);g.addColorStop(1,"#ff4b47");
+    ctx.fillStyle=g;ctx.fillRect(-s/2,-s/2,s,s);ctx.shadowBlur=0;ctx.strokeStyle="#fff7e9";ctx.lineWidth=2;ctx.strokeRect(-s/2+2,-s/2+2,s-4,s-4);
+    ctx.fillStyle="#111522";ctx.fillRect(-s*.23,-s*.12,s*.13,s*.18);ctx.fillRect(s*.10,-s*.12,s*.13,s*.18);
+    ctx.restore();
+  }
+  function draw(dt){
+    drawBackground(dt);
+    for(const o of obstacles)drawObstacle(o);
+    if(state!=="menu")drawPlayer();
+    for(const p of particles){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size);}ctx.globalAlpha=1;
+    if(state==="menu"){
+      ctx.save();ctx.globalAlpha=.4;ctx.strokeStyle=levelData[selectedLevel].accent;ctx.lineWidth=2;ctx.strokeRect(W*.18,ground-40,30,30);ctx.restore();
+    }
+  }
+  function loop(t){
+    const dt=Math.min((t-last)/1000||0,.033);last=t;update(dt);draw(dt);requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  function togglePause(){
+    if(state==="playing"){state="paused";$("pause-screen").classList.remove("hidden");}
+    else if(state==="paused"){state="playing";$("pause-screen").classList.add("hidden");last=performance.now();}
+  }
+  $("play-btn").addEventListener("click",start);$("retry-btn").addEventListener("click",start);
+  $("menu-btn").addEventListener("click",()=>{state="menu";$("end-screen").classList.add("hidden");$("menu").classList.remove("hidden");resetRun();});
+  $("pause-btn").addEventListener("click",togglePause);$("resume-btn").addEventListener("click",togglePause);
+  $("pause-menu-btn").addEventListener("click",()=>{state="menu";$("pause-screen").classList.add("hidden");$("menu").classList.remove("hidden");resetRun();});
+  $("sound-btn").addEventListener("click",()=>{soundOn=!soundOn;$("sound-btn").textContent=soundOn?"♫":"♪";showToast(soundOn?"Suara aktif":"Suara mati");if(soundOn)beep(660);});
+  $("how-btn").addEventListener("click",()=>showToast("Ketuk layar / tekan Spasi untuk melompat."));
+  document.querySelectorAll(".level").forEach(b=>b.addEventListener("click",()=>{
+    selectedLevel=Number(b.dataset.level);document.querySelectorAll(".level").forEach(x=>x.classList.toggle("active",x===b));
+    resetRun();$("hud-level").textContent=String(selectedLevel+1).padStart(2,"0")+" / "+levelData[selectedLevel].name;
+  }));
+  canvas.addEventListener("pointerdown",e=>{if(state==="playing"){e.preventDefault();jump();}});
+  window.addEventListener("keydown",e=>{
+    if(["Space","ArrowUp","KeyW"].includes(e.code)){e.preventDefault();if(state==="playing")jump();else if(state==="menu")start();else if(state==="dead"||state==="won")start();else if(state==="paused")togglePause();}
+    if(e.code==="Escape")togglePause();
+  });
+  document.addEventListener("visibilitychange",()=>{if(document.hidden&&state==="playing")togglePause();});
+  resetRun();
+  if("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  }
+})();
+</script>
+</body>
+</html>
