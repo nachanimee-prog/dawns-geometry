@@ -1,0 +1,10 @@
+{
+  "name": "Dawns Geometri",
+  "short_name": "Geometri",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#090a12",
+  "theme_color": "#090a12",
+  "description": "Game neon cube runner orisinal yang bisa dimainkan offline.",
+  "icons": []
+}
